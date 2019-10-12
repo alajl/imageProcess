@@ -26,10 +26,9 @@ public class ImageToolKit {
     public final static int HEX_MODE = 1;
     public final static int DEC_MODE = 2;
 
-    public final static int[] sourceOne = new int[]{1, 2, 3, 4};
-    public final static int[][] sourceThree = new int[][]{{1, 3, 5, 7}, {9, 11, 13, 15}, {17, 19, 21, 23}};
-    //public final static int[][] sourceThree = new int[][]{{1, 3,}, {5,7}};
-    public final static int[][] sourceThree_1 = new int[][]{{1, 3, 5, 7}, {9, 11, 13, 15}, {17, 19, 21, 23}, {25, 27, 29, 31}};
+//    public final static int[] sourceOne = new int[]{1, 2, 3, 4};
+//    public final static int[][] sourceThree = new int[][]{{1, 3, 5, 7}, {9, 11, 13, 15}, {17, 19, 21, 23}};
+//    public final static int[][] sourceThree_1 = new int[][]{{1, 3, 5, 7}, {9, 11, 13, 15}, {17, 19, 21, 23}, {25, 27, 29, 31}};
 
     public static int[][] getArrayRGB(BufferedImage image) {
 
@@ -81,11 +80,11 @@ public class ImageToolKit {
 
     public static int getSingleRGBFromValue(int value, int type) {
         switch (type) {
-            case ImageToolKit.B:
+            case ImageToolKit.R:
                 return (value & 0x00FF0000) >> 16;
             case ImageToolKit.G:
                 return (value & 0x0000FF00) >> 8;
-            case ImageToolKit.R:
+            case ImageToolKit.B:
                 return (value & 0x000000FF);
             default:
                 return (value & 0x00FF0000) >> 16;
@@ -94,11 +93,11 @@ public class ImageToolKit {
 
     public static int setSingleARGBToValue(int value, int RGB, int type) {
         switch (type) {
-            case ImageToolKit.B:
+            case ImageToolKit.R:
                 return (value & 0x0000FFFF) | (RGB << 16);
             case ImageToolKit.G:
                 return (value & 0x00FF00FF) | (RGB << 8);
-            case ImageToolKit.R:
+            case ImageToolKit.B:
                 return (value & 0x00FFFF00) | RGB;
             case ImageToolKit.A:
                 return value | 0xFF000000;
@@ -138,10 +137,6 @@ public class ImageToolKit {
         return ImageToolKit.buildImageWithArray(logarithmImage(getArrayRGB(image)), BufferedImage.TYPE_BYTE_GRAY);
     }
 
-    public static BufferedImage buildBImage(BufferedImage image) { //图像Log函数反转
-        return ImageToolKit.buildImageWithArray(transferBImage(getArrayRGB(image)), BufferedImage.TYPE_3BYTE_BGR);
-    }
-
     public static Vector<BufferedImage> buildRFreqAmpImage(BufferedImage image) { //图像Log函数反转
         return transferRFreqAmpImage(getArrayRGB(image));
     }
@@ -150,12 +145,16 @@ public class ImageToolKit {
         return transferRFreqAmpSignImage(getArrayRGB(image), getArrayRGB(signImage));
     }
 
-    public static BufferedImage buildGImage(BufferedImage image) { //图像Log函数反转
-        return ImageToolKit.buildImageWithArray(transferGImage(getArrayRGB(image)), BufferedImage.TYPE_3BYTE_BGR);
+    public static BufferedImage buildRImage(BufferedImage image) {
+        return ImageToolKit.buildImageWithArray(transferRImage(getArrayRGB(image)), BufferedImage.TYPE_3BYTE_BGR);
     }
 
-    public static BufferedImage buildRImage(BufferedImage image) { //图像Log函数反转
-        return ImageToolKit.buildImageWithArray(transferRImage(getArrayRGB(image)), BufferedImage.TYPE_3BYTE_BGR);
+    public static BufferedImage buildBImage(BufferedImage image) {
+        return ImageToolKit.buildImageWithArray(transferBImage(getArrayRGB(image)), BufferedImage.TYPE_3BYTE_BGR);
+    }
+
+    public static BufferedImage buildGImage(BufferedImage image) {
+        return ImageToolKit.buildImageWithArray(transferGImage(getArrayRGB(image)), BufferedImage.TYPE_3BYTE_BGR);
     }
 
     public static int[][] zoomOutNormal(int[][] source) {
@@ -221,14 +220,6 @@ public class ImageToolKit {
                 rgb = ImageToolKit.setSingleARGBToValue(rgb, tempR, ImageToolKit.R);
                 rgb = ImageToolKit.setSingleARGBToValue(rgb, tempG, ImageToolKit.G);
                 rgb = ImageToolKit.setSingleARGBToValue(rgb, tempB, ImageToolKit.B);
-//                for (int i = 0; i <= 2; ++i) {
-//                    float b00 = get(c00, i);
-//                    float b10 = get(c10, i);
-//                    float b01 = get(c01, i);
-//                    float b11 = get(c11, i);
-//                    int ble = ((int) blerp(b00, b10, b01, b11, gx - gxi, gy - gyi)) << (8 * i);
-//                    rgb = rgb | ble;
-//                }
                 target[y][x] = rgb;
             }
         }
@@ -262,9 +253,6 @@ public class ImageToolKit {
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.B);
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.A);
                 target[sourceRow][sourceCol] = temp;
-//                System.out.printf("0x%08x ", source[sourceRow][sourceCol]);
-//                System.out.printf("0x%08x ", value);
-//                System.out.printf("0x%08x\n", temp);
             }
         }
         return target;
@@ -282,9 +270,6 @@ public class ImageToolKit {
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.B);
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.A);
                 target[sourceRow][sourceCol] = temp;
-//                System.out.printf("0x%08x ", source[sourceRow][sourceCol]);
-//                System.out.printf("0x%08x ", value);
-//                System.out.printf("0x%08x\n", temp);
                 temp = 0;
             }
         }
@@ -302,9 +287,6 @@ public class ImageToolKit {
                 temp = ImageToolKit.setSingleARGBToValue(temp, value, ImageToolKit.B);
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.A);
                 target[sourceRow][sourceCol] = temp;
-//                System.out.printf("0x%08x ", source[sourceRow][sourceCol]);
-//                System.out.printf("0x%08x ", value);
-//                System.out.printf("0x%08x\n", temp);
             }
         }
         return target;
@@ -312,11 +294,11 @@ public class ImageToolKit {
 
     public static Vector<BufferedImage> transferRFreqAmpImage(int[][] source) {
         int Max = 0;
-        int h = source.length; // sourceRow
-        int w = source[0].length; //sourceCol
+        int height = source.length; // sourceRow
+        int weight = source[0].length; //sourceCol
         int value = 0, temp = 0;
         int R = 0, G = 0, B = 0;
-        Complex[][] pcplx = new Complex[h][w];
+        Complex[][] pcplx = new Complex[height][weight];
         int[][] redSourcelImage = new int[source.length][source[0].length];
         int[][] redChannelImage = new int[source.length][source[0].length];
         int[][] freqRedImage = new int[source.length][source[0].length];
@@ -324,22 +306,22 @@ public class ImageToolKit {
 
         for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
             for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
-                value = ImageToolKit.getSingleRGBFromValue(source[sourceRow][sourceCol], ImageToolKit.B);
-                temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.R);
+                value = ImageToolKit.getSingleRGBFromValue(source[sourceRow][sourceCol], ImageToolKit.R);
+                temp = ImageToolKit.setSingleARGBToValue(temp, value, ImageToolKit.R);
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.G);
-                temp = ImageToolKit.setSingleARGBToValue(temp, value, ImageToolKit.B);
+                temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.B);
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.A);
                 redSourcelImage[sourceRow][sourceCol] = temp;
                 pcplx[sourceRow][sourceCol] = new Complex(value, 0);
             }
         }
 
-        double[][] Amp = new double[h][w];
-        double[][] power = new double[h][w];
+        double[][] Amp = new double[height][weight];
+        double[][] power = new double[height][weight];
 
-        FFT2.FFT_2(pcplx, h);
+        FFT2.FFT_2(pcplx, height);
         Complex[] res = FFT2.twoDimensionalArraysToOneDimensionalArray(pcplx);
-        FFT2.FFT_2_Shift(res, h);  //分散于四个角的低频信号经过移位到中心后，变得更加的易于观察了
+        FFT2.FFT_2_Shift(res, height);  //分散于四个角的低频信号经过移位到中心后，变得更加的易于观察了
         pcplx = FFT2.oneDimensionalArrayToTwoDimensionalArrays(res);
 
         //算能量和相位
@@ -360,8 +342,8 @@ public class ImageToolKit {
         }
 
         if (Max == 0) {
-            for (int y = 0; y < h; y++) { // row
-                for (int x = 0; x < w; x++) { // col
+            for (int y = 0; y < height; y++) { // row
+                for (int x = 0; x < weight; x++) { // col
                     freqRedImage[y][x] = 0;
                     R = (int) ((Amp[y][x] + 1.571) * 255 / 3.1416);
                     G = (int) ((Amp[y][x] + 1.58) * 255 / 3.1416);
@@ -370,8 +352,8 @@ public class ImageToolKit {
                 }
             }
         } else {
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < weight; x++) {
                     R = (int) (power[y][x] * 255 / Max);
                     G = (int) (power[y][x] * 255 / Max);
                     B = (int) (power[y][x] * 255 / Max);
@@ -385,12 +367,12 @@ public class ImageToolKit {
         }
 
         res = FFT2.twoDimensionalArraysToOneDimensionalArray(pcplx);
-        FFT2.FFT_2_Shift(res, h);  //分散于四个角的低频信号经过移位到中心后，变得更加的易于观察了
+        FFT2.FFT_2_Shift(res, height);  //分散于四个角的低频信号经过移位到中心后，变得更加的易于观察了
         pcplx = FFT2.oneDimensionalArrayToTwoDimensionalArrays(res);
-        FFT2.IFFT_2(pcplx, h);
+        FFT2.IFFT_2(pcplx, height);
 
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < weight; x++) {
                 if (pcplx[y][x].re > 255) {
                     redChannelImage[y][x] = new Color(255, 0, 0).getRGB();
                     continue;
@@ -412,21 +394,25 @@ public class ImageToolKit {
 
         return resImage;
     }
-
+    /*
+      这个方法和transferRFreqAmpImage大部分相同，
+      唯一的区别就是：
+      计算mapScale和签名叠加到频域
+    */
     public static Vector<BufferedImage> transferRFreqAmpSignImage(int[][] source, int[][] signSourceImage) {
         int Max = 0;
-        int h = source.length; // sourceRow
-        int w = source[0].length; //sourceCol
+        int height = source.length; // sourceRow
+        int weight = source[0].length; //sourceCol
         int value = 0, temp = 0;
         int R = 0, G = 0, B = 0;
-        Complex[][] pcplx = new Complex[h][w];
+        Complex[][] pcplx = new Complex[height][weight];
         int[][] redSourcelImage = new int[source.length][source[0].length];
         int[][] redChannelImage = new int[source.length][source[0].length];
         int[][] freqRedImage = new int[source.length][source[0].length];
         int[][] ampRedImage = new int[source.length][source[0].length];
         int[][] signedImage = new int[source.length][source[0].length];
-        double[][] Amp = new double[h][w];
-        double[][] power = new double[h][w];
+        double[][] Amp = new double[height][weight];
+        double[][] power = new double[height][weight];
         float[][] mapScale = new float[signSourceImage.length][signSourceImage[0].length];
 
         for (int sourceRow = 0; sourceRow < signSourceImage.length; sourceRow++) {
@@ -442,30 +428,30 @@ public class ImageToolKit {
 
         for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
             for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
-                value = ImageToolKit.getSingleRGBFromValue(source[sourceRow][sourceCol], ImageToolKit.B);
-                temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.R);
+                value = ImageToolKit.getSingleRGBFromValue(source[sourceRow][sourceCol], ImageToolKit.R);
+                temp = ImageToolKit.setSingleARGBToValue(temp, value, ImageToolKit.R);
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.G);
-                temp = ImageToolKit.setSingleARGBToValue(temp, value, ImageToolKit.B);
+                temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.B);
                 temp = ImageToolKit.setSingleARGBToValue(temp, 0, ImageToolKit.A);
                 redSourcelImage[sourceRow][sourceCol] = temp;
                 pcplx[sourceRow][sourceCol] = new Complex(value, 0);
             }
         }
 
-        FFT2.FFT_2(pcplx, h);
+        FFT2.FFT_2(pcplx, height);
 
         //签名叠加到频域
         for (int y = 1; y < mapScale.length - 1; y++) {
             for (int x = 1; x < mapScale[0].length - 1; x++) {
                 pcplx[y][x].re *= mapScale[y / 2][x];
                 pcplx[y][x].im *= mapScale[y / 2][x];
-                pcplx[(h - y)][w - x].re *= mapScale[y / 2][x];
-                pcplx[(h - y)][w - x].im *= mapScale[y / 2][x];
+                pcplx[(height - y)][weight - x].re *= mapScale[y / 2][x];
+                pcplx[(height - y)][weight - x].im *= mapScale[y / 2][x];
             }
         }
-
+        //实在不想把方法转换为二维数组了的，就偷懒了，原始作者的方法是一维的，那就二维转一维，再一维转二维了
         Complex[] res = FFT2.twoDimensionalArraysToOneDimensionalArray(pcplx);
-        FFT2.FFT_2_Shift(res, h);  //分散于四个角的低频信号经过移位到中心后，变得更加的易于观察了
+        FFT2.FFT_2_Shift(res, height);  //分散于四个角的低频信号经过移位到中心后，变得更加的易于观察了
         pcplx = FFT2.oneDimensionalArrayToTwoDimensionalArrays(res);
 
         //算能量和相位
@@ -486,8 +472,8 @@ public class ImageToolKit {
         }
 
         if (Max == 0) {
-            for (int y = 0; y < h; y++) { // row
-                for (int x = 0; x < w; x++) { // col
+            for (int y = 0; y < height; y++) { // row
+                for (int x = 0; x < weight; x++) { // col
                     freqRedImage[y][x] = 0;
                     R = (int) ((Amp[y][x] + 1.571) * 255 / 3.1416);
                     G = (int) ((Amp[y][x] + 1.58) * 255 / 3.1416);
@@ -496,8 +482,8 @@ public class ImageToolKit {
                 }
             }
         } else {
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < weight; x++) {
                     R = (int) (power[y][x] * 255 / Max);
                     G = (int) (power[y][x] * 255 / Max);
                     B = (int) (power[y][x] * 255 / Max);
@@ -511,13 +497,13 @@ public class ImageToolKit {
         }
 
         res = FFT2.twoDimensionalArraysToOneDimensionalArray(pcplx);
-        FFT2.FFT_2_Shift(res, h);  //分散于四个角的低频信号经过移位到中心后，变得更加的易于观察了
+        FFT2.FFT_2_Shift(res, height);  //分散于四个角的低频信号经过移位到中心后，变得更加的易于观察了
         pcplx = FFT2.oneDimensionalArrayToTwoDimensionalArrays(res);
         //逆傅里叶变化还原图像
-        FFT2.IFFT_2(pcplx, h);
+        FFT2.IFFT_2(pcplx, height);
 
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < weight; x++) {
                 if (pcplx[y][x].re > 255) {
                     redChannelImage[y][x] = new Color(255, 0, 0).getRGB();
                     continue;
@@ -533,7 +519,7 @@ public class ImageToolKit {
 
         for (int sourceRow = 0; sourceRow < signedImage.length; sourceRow++) {
             for (int sourceCol = 0; sourceCol < signedImage[0].length; sourceCol++) {
-                signedImage[sourceRow][sourceCol] = ImageToolKit.setSingleARGBToValue(source[sourceRow][sourceCol], redChannelImage[sourceRow][sourceCol] >> 16, ImageToolKit.B);
+                signedImage[sourceRow][sourceCol] = ImageToolKit.setSingleARGBToValue(source[sourceRow][sourceCol], redChannelImage[sourceRow][sourceCol] >> 16, ImageToolKit.R);
             }
         }
 

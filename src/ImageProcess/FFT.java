@@ -1,26 +1,5 @@
 package ImageProcess;
 
-/**
- * ****************************************************************************
- * Compilation: javac FFT.java Execution: java FFT n Dependencies: Complex.java
- *
- * Compute the FFT and inverse FFT of a length n complex sequence using the
- * radix 2 Cooley-Tukey algorithm.
- *
- * Bare bones implementation that runs in O(n log n) time. Our goal is to
- * optimize the clarity of the code, rather than performance.
- *
- * Limitations ----------- - assumes n is a power of 2
- *
- * - not the most memory efficient algorithm (because it uses an object type for
- * representing complex numbers and because it re-allocates memory for the
- * subarray, instead of doing in-place or reusing a single temporary array)
- *
- * For an in-place radix 2 Cooley-Tukey FFT, see
- * https://introcs.cs.princeton.edu/java/97data/InplaceFFT.java.html
- *
- *****************************************************************************
- */
 public class FFT {
 
     // compute the FFT of x[], assuming its length is a power of 2
@@ -204,7 +183,4 @@ public class FFT {
     }
 
 }
-/*
-Copyright © 2000–2017, Robert Sedgewick and Kevin Wayne.
-Last updated: Wed Nov 29 05:15:09 EST 2017.
-*/
+

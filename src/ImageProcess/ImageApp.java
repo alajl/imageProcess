@@ -89,9 +89,9 @@ public class ImageApp extends JFrame implements ItemListener {
                         imagePanel.reFresh();
                         break;
                     case 7: //"RGB分离"
-                        imagePanel.setChangedImg(ImageToolKit.buildBImage(imagePanel.getSourceImg()));
+                        imagePanel.setChangedImg(ImageToolKit.buildRImage(imagePanel.getSourceImg()));
+                        imagePanel.addChangedImg(ImageToolKit.buildBImage(imagePanel.getSourceImg()));
                         imagePanel.addChangedImg(ImageToolKit.buildGImage(imagePanel.getSourceImg()));
-                        imagePanel.addChangedImg(ImageToolKit.buildRImage(imagePanel.getSourceImg()));
                         imagePanel.reFresh();
                         break;
                     case 8://"傅里叶变化"
