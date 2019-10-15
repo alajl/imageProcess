@@ -29,7 +29,6 @@ public class ImageToolKit {
 //    public final static int[] sourceOne = new int[]{1, 2, 3, 4};
 //    public final static int[][] sourceThree = new int[][]{{1, 3, 5, 7}, {9, 11, 13, 15}, {17, 19, 21, 23}};
 //    public final static int[][] sourceThree_1 = new int[][]{{1, 3, 5, 7}, {9, 11, 13, 15}, {17, 19, 21, 23}, {25, 27, 29, 31}};
-
     public static int[][] getArrayRGB(BufferedImage image) {
 
         int height = image.getHeight();
@@ -143,6 +142,10 @@ public class ImageToolKit {
 
     public static Vector<BufferedImage> buildRFreqAmpSignImage(BufferedImage image, BufferedImage signImage) { //图像Log函数反转
         return transferRFreqAmpSignImage(getArrayRGB(image), getArrayRGB(signImage));
+    }
+
+    public static Vector<BufferedImage> extraceImagefronSignedImage(BufferedImage image, BufferedImage image1) { //图像Log函数反转
+        return extraceImagefronSignedImage(getArrayRGB(image), getArrayRGB(image1));
     }
 
     public static BufferedImage buildRImage(BufferedImage image) {
@@ -395,10 +398,11 @@ public class ImageToolKit {
         return resImage;
     }
     /*
-      这个方法和transferRFreqAmpImage大部分相同，
-      唯一的区别就是：
-      计算mapScale和签名叠加到频域
-    */
+     这个方法和transferRFreqAmpImage大部分相同，
+     唯一的区别就是：
+     计算mapScale和签名叠加到频域
+     */
+
     public static Vector<BufferedImage> transferRFreqAmpSignImage(int[][] source, int[][] signSourceImage) {
         int Max = 0;
         int height = source.length; // sourceRow
@@ -414,12 +418,11 @@ public class ImageToolKit {
         double[][] Amp = new double[height][weight];
         double[][] power = new double[height][weight];
         float[][] mapScale = new float[signSourceImage.length][signSourceImage[0].length];
-
         for (int sourceRow = 0; sourceRow < signSourceImage.length; sourceRow++) {
             for (int sourceCol = 0; sourceCol < signSourceImage[0].length; sourceCol++) {
                 //System.out.println(signSourceImage[sourceRow][sourceCol] & 0x00ffffff);
                 if ((signSourceImage[sourceRow][sourceCol] & 0x00ffffff) > 0) {
-                    mapScale[sourceRow][sourceCol] = 1.0f / 50; //
+                    mapScale[sourceRow][sourceCol] = 1.0f / 50;
                 } else {
                     mapScale[sourceRow][sourceCol] = 1.f;
                 }
@@ -441,12 +444,12 @@ public class ImageToolKit {
         FFT2.FFT_2(pcplx, height);
 
         //签名叠加到频域
-        for (int y = 1; y < mapScale.length - 1; y++) {
-            for (int x = 1; x < mapScale[0].length - 1; x++) {
-                pcplx[y][x].re *= mapScale[y / 2][x];
-                pcplx[y][x].im *= mapScale[y / 2][x];
-                pcplx[(height - y)][weight - x].re *= mapScale[y / 2][x];
-                pcplx[(height - y)][weight - x].im *= mapScale[y / 2][x];
+        for (int y = 0; y < mapScale.length; y++) {
+            for (int x = 0; x < mapScale[0].length; x++) {
+                pcplx[y][x].re *= mapScale[y][x];
+                pcplx[y][x].im *= mapScale[y][x];
+                pcplx[(height / 2 + y)][weight / 2 + x].re *= mapScale[y][x];
+                pcplx[(height / 2 + y)][weight / 2 + x].im *= mapScale[y][x];
             }
         }
         //实在不想把方法转换为二维数组了的，就偷懒了，原始作者的方法是一维的，那就二维转一维，再一维转二维了
@@ -529,7 +532,70 @@ public class ImageToolKit {
         resImage.add(ImageToolKit.buildImageWithArray(freqRedImage, BufferedImage.TYPE_3BYTE_BGR));
         resImage.add(ImageToolKit.buildImageWithArray(ampRedImage, BufferedImage.TYPE_3BYTE_BGR));
         resImage.add(ImageToolKit.buildImageWithArray(signedImage, BufferedImage.TYPE_3BYTE_BGR));
+        return resImage;
+    }
 
+    public static Vector<BufferedImage> extraceImagefronSignedImage(int[][] sourceSigned, int[][] source) {
+        int Max = 0;
+        int height = source.length; // sourceRow
+        int weight = source[0].length; //sourceCol
+        int value = 0, temp = 0;
+        int R = 0, G = 0, B = 0;
+        Complex[][] pcplxSourceSigned = new Complex[height][weight];
+        Complex[][] pcplxSource = new Complex[height][weight];
+        int[][] signedImage = new int[source.length / 2][source[0].length / 2];
+        double[][] mapScale = new double[sourceSigned.length / 2][sourceSigned[0].length / 2];
+        int[][] mapScaleInt = new int[sourceSigned.length / 2][sourceSigned[0].length / 2];
+        Complex[][] mapScaleComplex = new Complex[height / 2][weight / 2];
+
+        for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                //value = sourceSigned[sourceRow][sourceCol] & 0xffff0000;
+                value = ImageToolKit.getSingleRGBFromValue(sourceSigned[sourceRow][sourceCol], ImageToolKit.R);
+                pcplxSourceSigned[sourceRow][sourceCol] = new Complex(value, 0);
+            }
+        }
+
+        for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                value = ImageToolKit.getSingleRGBFromValue(source[sourceRow][sourceCol], ImageToolKit.R);
+                pcplxSource[sourceRow][sourceCol] = new Complex(value, 0);
+
+            }
+        }
+
+        FFT2.FFT_2(pcplxSourceSigned, height);
+        FFT2.FFT_2(pcplxSource, height);
+
+        for (int sourceRow = 0; sourceRow < mapScale.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < mapScale[0].length; sourceCol++) {
+                mapScaleComplex[sourceRow][sourceCol] = new Complex(0, 0);
+                mapScale[sourceRow][sourceCol] = pcplxSourceSigned[sourceRow][sourceCol].re / pcplxSource[sourceRow][sourceCol].re;
+                //System.out.println(mapScaleInt[y][x]);
+                mapScaleComplex[sourceRow][sourceCol].re = pcplxSourceSigned[sourceRow][sourceCol].re / pcplxSource[sourceRow][sourceCol].re;
+                mapScaleComplex[sourceRow][sourceCol].im = pcplxSourceSigned[sourceRow][sourceCol].im / pcplxSource[sourceRow][sourceCol].im;
+            }
+        }
+        FFT2.IFFT_2(mapScaleComplex, height / 2);
+
+        for (int y = 0; y < height / 2; y++) {
+            for (int x = 0; x < weight / 2; x++) {
+                
+                if (mapScaleComplex[y][x].re > 255) {
+                    mapScaleInt[y][x] = new Color(255, 0, 0).getRGB();
+                    continue;
+                }
+
+                if (mapScaleComplex[y][x].re < 0) {
+                    mapScaleInt[y][x] = new Color(0, 0, 0).getRGB();
+                    continue;
+                }
+                mapScaleInt[y][x] = new Color((int) mapScaleComplex[y][x].re, 0, 0).getRGB();
+            }
+        }
+
+        Vector<BufferedImage> resImage = new Vector();
+        resImage.add(ImageToolKit.buildImageWithArray(mapScaleInt, BufferedImage.TYPE_3BYTE_BGR));
         return resImage;
     }
 
