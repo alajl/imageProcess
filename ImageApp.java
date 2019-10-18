@@ -21,13 +21,14 @@ public class ImageApp extends JFrame implements ItemListener {
     private final ImagePanel imagePanel;
     private final JComboBox imageCommandList;
     private final String[] COMMANDDESCRIPTION = new String[]{"--imageCommand--", "还原", "普通放大", "二维插值放大", "灰度图", "图像反转",
-        "对数图像变化", "RGB分离", "傅里叶变化", "签名-傅里叶变化","签名剥离"
+        "对数图像变化", "RGB分离", "傅里叶变化", "签名(红色(R)通道)-傅里叶变化","签名(RGB通道)-傅里叶变化"
     };
     public static final String SOURCE_IMAGE_FILE = ".\\res\\image_1.jpg";
     public static final String SOURCE_IMAGE_SIGNED_FILE = ".\\res\\image_signed_1.jpg";
     public static final String SOURCE_IMAGE_X_FILE = ".\\res\\\\image_x.jpeg";
     public static final String SOURCE_IMAGE_FOURIER_FILE = ".\\res\\\\fourier_1.jpg";
     public static final String SOURCE_IMAGE_SIGN_FILE = ".\\res\\sign_image.jpg";
+     public static final String SOURCE_IMAGE_SIGN_1_FILE = ".\\res\\sign_image_1.jpg";
     private static final int PANEL_WIDTH = 1200;
     private static final int PANEL_HEIGHT = 1200;
 
@@ -55,7 +56,7 @@ public class ImageApp extends JFrame implements ItemListener {
         Vector<BufferedImage> tempVector;
         if (e.getStateChange() == ItemEvent.SELECTED) {
             try {
-                System.out.println("---ItemEvent performed:index:" + imageCommandList.getSelectedIndex() + ":,description:" + e.paramString() + "---");
+                //System.out.println("---ItemEvent performed:index:" + imageCommandList.getSelectedIndex() + ":,description:" + e.paramString() + "---");
                 switch (imageCommandList.getSelectedIndex()) {
                     case 0:
                         break;
@@ -103,7 +104,7 @@ public class ImageApp extends JFrame implements ItemListener {
                         }
                         imagePanel.reFresh();
                         break;
-                    case 9://"签名-傅里叶变化"
+                    case 9://"签名(红色(R)通道)-傅里叶变化"
                         imagePanel.restoreImageList();
                         tempImage = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_SIGN_FILE)));
                         tempVector = ImageToolKit.buildRFreqAmpSignImage(imagePanel.getSourceImg(), tempImage);
@@ -112,17 +113,26 @@ public class ImageApp extends JFrame implements ItemListener {
                         }
                         imagePanel.reFresh();
                         break;
-                    case 10://"签名剥离"
+                    case 10://"签名(RGB通道)-傅里叶变化"
                         imagePanel.restoreImageList();
-                        tempImage = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_SIGNED_FILE)));
-                        tempImage1 = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_FILE)));
-                        
-                        tempVector = ImageToolKit.extraceImagefronSignedImage(tempImage,tempImage1);
+                        tempImage = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_SIGN_1_FILE)));
+                        tempVector = ImageToolKit.buildRGBFreqAmpSignImage(imagePanel.getSourceImg(), tempImage);
                         for (BufferedImage image : tempVector) {
                             imagePanel.addChangedImg(image);
                         }
                         imagePanel.reFresh();
                         break;
+//                    case 11://"签名剥离"
+//                        imagePanel.restoreImageList();
+//                        tempImage = ImageIO.read(new FileInputStream(new File(".\\res\\sign_image.bmp")));
+//                        tempImage1 = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_FILE)));
+//                        
+//                        tempVector = ImageToolKit.extraceImagefronSignedImage(tempImage,tempImage1);
+//                        for (BufferedImage image : tempVector) {
+//                            imagePanel.addChangedImg(image);
+//                        }
+//                        imagePanel.reFresh();
+//                        break;
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
