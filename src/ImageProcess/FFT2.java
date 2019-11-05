@@ -30,6 +30,18 @@ public class FFT2 {
         return res;
     }
 
+    public static int[] twoDimensionalArraysToOneDimensionalArray(int[][] array) {
+        int index = 0;
+        int[] res = new int[array.length * array[0].length];
+        for (int y = 0; y < array.length; y++) {
+            for (int x = 0; x < array.length; x++) {
+                res[index] = array[y][x];
+                index++;
+            }
+        }
+        return res;
+    }
+
     public static Complex[][] oneDimensionalArrayToTwoDimensionalArrays(Complex[] array) {
         int length = (int) (Math.sqrt(array.length));
         Complex[][] res = new Complex[length][length];
@@ -88,6 +100,7 @@ public class FFT2 {
             in[i] = value[i];
         }
     }
+
     /*
      1.设二维数组包含待变换的数据
      2.对二维数组的每一行做傅里叶变换，并将变换结果替换原数组。

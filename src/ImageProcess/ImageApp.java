@@ -21,7 +21,8 @@ public class ImageApp extends JFrame implements ItemListener {
     private final ImagePanel imagePanel;
     private final JComboBox imageCommandList;
     private final String[] COMMANDDESCRIPTION = new String[]{"--imageCommand--", "还原", "普通放大", "二维插值放大", "灰度图", "图像反转",
-        "对数图像变化", "RGB分离", "傅里叶变化", "签名剥离"
+        "对数图像变化", "RGB分离", "傅里叶变化", "签名剥离", "直方图均衡", "7X7 局部直方图均衡", "平均滤波", "3X3 加权平均滤波",
+        "3X3/5X5 中值滤波","锐化空间滤波","拉普拉斯滤波"
     };
     public static final String SOURCE_IMAGE_FILE = ".\\res\\image_1.jpg";
     public static final String SOURCE_IMAGE_SIGNED_FILE = ".\\res\\image_signed_1.jpg";
@@ -52,8 +53,8 @@ public class ImageApp extends JFrame implements ItemListener {
 
     @Override
     public void itemStateChanged(ItemEvent e) {
-        BufferedImage tempImage,tempImage1;
-        Vector<BufferedImage> tempVector;
+        BufferedImage tempImage, tempImage1;
+        Vector<BufferedImage> tempVector;;
         if (e.getStateChange() == ItemEvent.SELECTED) {
             try {
                 //System.out.println("---ItemEvent performed:index:" + imageCommandList.getSelectedIndex() + ":,description:" + e.paramString() + "---");
@@ -108,6 +109,68 @@ public class ImageApp extends JFrame implements ItemListener {
                         imagePanel.restoreImageList();
                         tempImage = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_SIGN_FILE)));
                         tempVector = ImageToolKit.extractRFreqAmpSignImage(imagePanel.getSourceImg(), tempImage);
+                        for (BufferedImage image : tempVector) {
+                            imagePanel.addChangedImg(image);
+                        }
+                        imagePanel.reFresh();
+                        break;
+                    case 10://"直方图均衡"
+                        imagePanel.restoreImageList();
+                        tempImage = ImageIO.read(new FileInputStream(new File(".\\res\\\\Fig0310.tif")));
+                        imagePanel.setSourceImgBufferedImage(tempImage);
+                        tempVector = new Vector<BufferedImage>();
+                        tempVector.add(ImageToolKit.buildHistogramImage(tempImage));
+                        for (BufferedImage image : tempVector) {
+                            imagePanel.addChangedImg(image);
+                        }
+                        imagePanel.reFresh();
+                        break;
+                    case 11://"7X7 局部直方图均衡"
+                        imagePanel.restoreImageList();
+                        tempImage = ImageIO.read(new FileInputStream(new File(".\\res\\\\Fig0332.tif")));
+                        imagePanel.setSourceImgBufferedImage(tempImage);
+                        tempVector = new Vector<BufferedImage>();
+                        tempVector.add(ImageToolKit.buildHistogramImage(tempImage));
+                        tempVector.add(ImageToolKit.buildParticallyHistogramImage(tempImage, 3));
+                        for (BufferedImage image : tempVector) {
+                            imagePanel.addChangedImg(image);
+                        }
+                        imagePanel.reFresh();
+                        break;
+                    case 12://"平均滤波"
+                        imagePanel.restoreImageList();
+                        tempImage = ImageIO.read(new FileInputStream(new File(".\\res\\\\Fig0333.tif")));
+                        imagePanel.setSourceImgBufferedImage(tempImage);
+                        tempVector = new Vector<BufferedImage>();
+                        tempVector.add(ImageToolKit.buildEqualizationFilteringImage(tempImage, 3));
+                        tempVector.add(ImageToolKit.buildEqualizationFilteringImage(tempImage, 5));
+                        tempVector.add(ImageToolKit.buildEqualizationFilteringImage(tempImage, 7));
+                        tempVector.add(ImageToolKit.buildEqualizationFilteringImage(tempImage, 9));
+                        tempVector.add(ImageToolKit.buildEqualizationFilteringImage(tempImage, 15));
+                        tempVector.add(ImageToolKit.buildEqualizationFilteringImage(tempImage, 35));
+                        for (BufferedImage image : tempVector) {
+                            imagePanel.addChangedImg(image);
+                        }
+                        imagePanel.reFresh();
+                        break;
+                    case 13://   "3X3 加权平均滤波
+                        imagePanel.restoreImageList();
+                        tempImage = ImageIO.read(new FileInputStream(new File(".\\res\\\\Fig0335_big.tif")));
+                        imagePanel.setSourceImgBufferedImage(tempImage);
+                        tempVector = new Vector<BufferedImage>();
+                        tempVector.add(ImageToolKit.buildAddWeightFilteringImage(tempImage, 3));
+                        for (BufferedImage image : tempVector) {
+                            imagePanel.addChangedImg(image);
+                        }
+                        imagePanel.reFresh();
+                        break;
+                    case 14://   "3X3/5X5 中值滤波
+                        imagePanel.restoreImageList();
+                        tempImage = ImageIO.read(new FileInputStream(new File(".\\res\\\\Fig0335_big.tif")));
+                        imagePanel.setSourceImgBufferedImage(tempImage);
+                        tempVector = new Vector<BufferedImage>();
+                        tempVector.add(ImageToolKit.buildMiddleValueFilteringImage(tempImage, 3));
+                        tempVector.add(ImageToolKit.buildMiddleValueFilteringImage(tempImage, 5));
                         for (BufferedImage image : tempVector) {
                             imagePanel.addChangedImg(image);
                         }

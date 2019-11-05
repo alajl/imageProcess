@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Vector;
 import javax.imageio.ImageIO;
 
@@ -68,6 +70,18 @@ public class ImageToolKit {
             }
             System.out.println("\n");
         }
+    }
+
+    public static void printArray(int array[], int mode) {
+        System.out.println("*************************");
+        for (int rowX = 0; rowX < array.length; rowX++) {
+            if (mode == HEX_MODE) {
+                System.out.printf("0x%08x ", array[rowX]);
+            } else {
+                System.out.print(" " + array[rowX]);
+            }
+        }
+        System.out.println("\n");
     }
 
     public static int getGreyValueFromValue(int value) {
@@ -136,11 +150,35 @@ public class ImageToolKit {
         return ImageToolKit.buildImageWithArray(logarithmImage(getArrayRGB(image)), BufferedImage.TYPE_BYTE_GRAY);
     }
 
-    public static Vector<BufferedImage> buildRFreqAmpImage(BufferedImage image) { //图像Log函数反转
+    public static Vector<BufferedImage> buildRFreqAmpImage(BufferedImage image) {
         return transferRFreqAmpImage(getArrayRGB(image));
     }
 
-    public static Vector<BufferedImage> extractRFreqAmpSignImage(BufferedImage image, BufferedImage signImage) { //图像Log函数反转
+    public static BufferedImage buildHistogramImage(BufferedImage image) {
+        return transferHistogramImage(getArrayRGB(image));
+    }
+
+    public static BufferedImage buildParticallyHistogramImage(BufferedImage image, int particallySize) {
+        return transferParticallyHistogramEqualizationImage(getArrayRGB(image), particallySize);
+    }
+
+    public static BufferedImage buildEqualizationFilteringImage(BufferedImage image, int particallySize) {
+        return ImageToolKit.buildImageWithArray(ImageToolKit.transferEqualizationFiltering(getArrayRGB(image), particallySize), BufferedImage.TYPE_BYTE_GRAY);
+    }
+
+    public static BufferedImage buildAddWeightFilteringImage(BufferedImage image, int particallySize) {
+        if (particallySize > 3) {
+            System.out.println("大于3X3的权值滤波都没实现");
+            return image;
+        }
+        return ImageToolKit.buildImageWithArray(ImageToolKit.transferAddWeightFilteringFiltering(getArrayRGB(image), particallySize), BufferedImage.TYPE_BYTE_GRAY);
+    }
+
+    public static BufferedImage buildMiddleValueFilteringImage(BufferedImage image, int particallySize) {
+        return ImageToolKit.buildImageWithArray(ImageToolKit.transferMiddleValueFilteringFiltering(getArrayRGB(image), particallySize), BufferedImage.TYPE_BYTE_GRAY);
+    }
+
+    public static Vector<BufferedImage> extractRFreqAmpSignImage(BufferedImage image, BufferedImage signImage) {
         return extractRFreqAmpSignImage(getArrayRGB(image), getArrayRGB(signImage));
     }
 
@@ -393,12 +431,12 @@ public class ImageToolKit {
 
         return resImage;
     }
+
     /*
      这个方法和transferRFreqAmpImage大部分相同，
      唯一的区别就是：
      计算mapScale和签名叠加到频域
      */
-
     public static Vector<BufferedImage> extractRFreqAmpSignImage(int[][] source, int[][] signSourceImage) {
         int Max = 0;
         int height = source.length; // sourceRow
@@ -544,6 +582,217 @@ public class ImageToolKit {
         return resImage;
     }
 
+    public static BufferedImage transferHistogramImage(int[][] source) {
+        return ImageToolKit.buildImageWithArray(transferHistogramEqualization(source), BufferedImage.TYPE_BYTE_GRAY);
+    }
+
+    public static BufferedImage transferParticallyHistogramEqualizationImage(int[][] source, int particallySize) {
+        int[][] target = new int[source.length][source[0].length];
+        int gray;
+        int grayLevel;
+        for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                grayLevel = ImageToolKit.transferParticallyHistogramEqualization(source, sourceRow, sourceCol, particallySize);
+                gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
+                target[sourceRow][sourceCol] = gray;
+            }
+        }
+        return ImageToolKit.buildImageWithArray(target, BufferedImage.TYPE_BYTE_GRAY);
+    }
+
+    public static int[][] transferEqualizationFiltering(int[][] source, int particallySize) {
+        int[][] target = new int[source.length][source[0].length];
+        int gray;
+        int grayLevel;
+        for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                grayLevel = ImageToolKit.transferEqualizationFiltering(source, sourceRow, sourceCol, particallySize);
+                gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
+                target[sourceRow][sourceCol] = gray;
+            }
+        }
+        return target;
+    }
+
+    public static int[][] transferAddWeightFilteringFiltering(int[][] source, int particallySize) {
+        int[][] target = new int[source.length][source[0].length];
+        int gray;
+        int grayLevel;
+        for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                grayLevel = ImageToolKit.transferAddWeightFilteringFiltering(source, sourceRow, sourceCol, particallySize);
+                gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
+                target[sourceRow][sourceCol] = gray;
+            }
+        }
+        return target;
+    }
+
+    public static int[][] transferMiddleValueFilteringFiltering(int[][] source, int particallySize) {
+        int[][] target = new int[source.length][source[0].length];
+        int gray;
+        int grayLevel;
+        for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                grayLevel = ImageToolKit.transferMiddleValueFilteringFiltering(source, sourceRow, sourceCol, particallySize);
+                gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
+                target[sourceRow][sourceCol] = gray;
+            }
+        }
+        return target;
+    }
+
+    public static int[][] transferHistogramEqualization(int[][] source) {
+        int[][] target = new int[source.length][source[0].length];
+        float[] histogramRate = new float[256];
+        float[] p = new float[256];
+        float[] s = new float[256];
+        int total = source.length * source[0].length;
+        for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                histogramRate[source[sourceRow][sourceCol] & 0x000000FF]++;
+            }
+        }
+
+        BigDecimal b;
+        for (int i = 0; i < histogramRate.length; i++) {
+            p[i] = histogramRate[i] / total;
+            b = new BigDecimal(p[i]);
+            p[i] = b.setScale(2, BigDecimal.ROUND_HALF_UP).floatValue();
+            if (i >= 1) {
+                s[i] = p[i] + s[i - 1];
+            } else {
+                s[i] = p[i];
+            }
+            b = new BigDecimal(s[i]);
+            s[i] = b.setScale(2, BigDecimal.ROUND_HALF_UP).floatValue();
+        }
+        int grayLevel, gray;
+        int originalGrayLevel = 0;
+        for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                originalGrayLevel = source[sourceRow][sourceCol] & 0x000000FF;
+                grayLevel = Math.round(s[originalGrayLevel] * 255);
+                gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
+                target[sourceRow][sourceCol] = gray;
+            }
+        }
+        return target;
+    }
+
+    public static int transferParticallyHistogramEqualization(int[][] source, int x, int y, int particallySize) {
+        if (x < particallySize / 2 || y < particallySize / 2 || (x + particallySize / 2 >= source.length) || (y + particallySize / 2 >= source[0].length)) {
+            //System.out.println("zhijie fanhui");
+            return source[x][y];
+        } else {
+            //System.out.println("[" + x + "][" + y + "]");
+            int[][] res = ImageToolKit.fetchParticallyArray(source, x, y, particallySize);
+            //ImageToolKit.printArray(res, ImageToolKit.DEC_MODE);
+            res = ImageToolKit.transferHistogramEqualization(res);
+            //System.out.println(source[x][y] + ":" + res[particallySize / 2][particallySize / 2]);
+            return res[particallySize / 2][particallySize / 2];
+        }
+    }
+
+    public static int transferEqualizationFiltering(int[][] source, int x, int y, int particallySize) {
+        if (x < particallySize / 2 || y < particallySize / 2 || (x + particallySize / 2 >= source.length) || (y + particallySize / 2 >= source[0].length)) {
+            return (source[x][y] & 0x000000FF);
+        } else {
+            int[][] res = ImageToolKit.fetchParticallyArray(source, x, y, particallySize);
+            /*
+            1 1 1
+            1 1 1
+            1 1 1
+             */
+            int sum = 0;
+            for (int sourceRow = 0; sourceRow < res.length; sourceRow++) {
+                for (int sourceCol = 0; sourceCol < res[0].length; sourceCol++) {
+                    sum += (res[sourceRow][sourceCol] & 0x000000FF);
+                }
+            }
+            return sum / 9; // 9 是平均滤波9个1相加
+        }
+    }
+
+    public static int transferAddWeightFilteringFiltering(int[][] source, int x, int y, int particallySize) {
+        if (x < particallySize / 2 || y < particallySize / 2 || (x + particallySize / 2 >= source.length) || (y + particallySize / 2 >= source[0].length)) {
+            return (source[x][y] & 0x000000FF);
+        } else {
+            int[][] res = ImageToolKit.fetchParticallyArray(source, x, y, particallySize);
+            /*
+            1 2 1
+            2 4 2
+            1 2 1
+             */
+            int[][] weight = new int[3][3];
+            weight[0][0] = 1;
+            weight[0][1] = 2;
+            weight[0][2] = 1;
+            weight[1][0] = 2;
+            weight[1][1] = 4;
+            weight[1][2] = 2;
+            weight[2][0] = 1;
+            weight[2][1] = 2;
+            weight[2][2] = 1;
+
+            int sum = 0;
+            for (int sourceRow = 0; sourceRow < res.length; sourceRow++) {
+                for (int sourceCol = 0; sourceCol < res[0].length; sourceCol++) {
+                    sum += (res[sourceRow][sourceCol] & 0x000000FF) * weight[sourceRow][sourceCol];
+                }
+            }
+            return sum / 16;  //16 是平均滤波9个权重相加
+        }
+    }
+
+    public static int transferMiddleValueFilteringFiltering(int[][] source, int x, int y, int particallySize) {
+        if (x < particallySize / 2 || y < particallySize / 2 || (x + particallySize / 2 >= source.length) || (y + particallySize / 2 >= source[0].length)) {
+            return (source[x][y] & 0x000000FF);
+        } else {
+            int[][] res = ImageToolKit.fetchParticallyArray(source, x, y, particallySize);
+            for (int sourceRow = 0; sourceRow < res.length; sourceRow++) {
+                for (int sourceCol = 0; sourceCol < res[0].length; sourceCol++) {
+                    res[sourceRow][sourceCol] = res[sourceRow][sourceCol] & 0x000000FF;
+                }
+            }
+            int[] temp = FFT2.twoDimensionalArraysToOneDimensionalArray(res);
+            Arrays.sort(temp);
+            return temp[temp.length / 2 + 1];
+        }
+    }
+
+    public static int[][] fetchParticallyArray(int[][] source, int x, int y, int particallySize) {
+        int[][] target = new int[particallySize][particallySize];
+        int[] factor = new int[particallySize];
+        int counter = 0;
+        for (int i = factor.length - 1; i >= 0; i--) {
+            factor[i] = particallySize / 2 - counter;
+            counter++;
+        }
+//        for (int i = 0; i < factor.length; i++) {
+//            System.out.println(factor[i]);
+//        }
+        int x_factor_position = 0;
+        int y_factor_position = 0;
+        int temp_x = 0;
+        int temp_y = 0;
+        //System.out.println("[" + x + "][" + y + "]");
+        for (int sourceRow = 0; sourceRow < target.length; sourceRow++) {
+            for (int sourceCol = 0; sourceCol < target[0].length; sourceCol++) {
+                //System.out.println(x_factor_position);
+                temp_x = x + factor[x_factor_position];
+                temp_y = y + factor[y_factor_position];
+                //System.out.println("[" + temp_x + "][" + temp_y + "]");
+                target[sourceRow][sourceCol] = source[temp_x][temp_y];
+                y_factor_position++;
+            }
+            x_factor_position++;
+            y_factor_position = 0;
+        }
+
+        return target;
+    }
+
     public static int[][] reversalImage(int[][] source) {
         //ImageToolKit.printArray(source, ImageToolKit.DEC_MODE);
         int[][] target = new int[source.length][source[0].length];
@@ -577,8 +826,6 @@ public class ImageToolKit {
                     //gray = (int) ((Math.log(1 + 10 * orginalGray) / Math.log(11)));
                     //log2(1 + v*f)/log2(v+1)
                 }
-                //System.out.println(orginalGray + "  " + gray);
-
                 gray = (gray << 16) + (gray << 8) + gray;
                 target[sourceRow][sourceCol] = gray;
             }
@@ -587,23 +834,49 @@ public class ImageToolKit {
         return target;
     }
 
-    public static void test(int a[]) {
-        for (int i = 0; i < a.length; i++) {
-            System.out.println(a[i]);
-        }
-    }
-
     public static void main(String[] args) {
         try {
-            BufferedImage image = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_FILE)));
-            BufferedImage signedImage = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_SIGN_FILE)));
-            Vector<BufferedImage> tempVector = ImageToolKit.extractRFreqAmpSignImage(image, signedImage);
-            int count = 0;
-            for (BufferedImage temp : tempVector) {
-                ImageIO.write(temp, "jpg", new File("test" + String.valueOf(count) + ".jpg"));
-                count++;
+//            BufferedImage image = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_FILE)));
+//            BufferedImage signedImage = ImageIO.read(new FileInputStream(new File(ImageApp.SOURCE_IMAGE_SIGN_FILE)));
+//            Vector<BufferedImage> tempVector = ImageToolKit.extractRFreqAmpSignImage(image, signedImage);
+//            int count = 0;
+//            for (BufferedImage temp : tempVector) {
+//                ImageIO.write(temp, "jpg", new File("test" + String.valueOf(count) + ".jpg"));
+//                count++;
+//            }
+            int[][] source = new int[5][5];
+            for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+                for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+                    source[sourceRow][sourceCol] = 0x000a0a0a;
+                }
             }
+            source[0][0] = 0x00010101;
+            source[0][1] = 0x00010101;
+            source[1][0] = 0x00010101;
+            source[1][1] = 0x00010101;
+            source[2][0] = 0x00010101;
+            source[2][1] = 0x00010101;
+            source[3][0] = 0x00010101;
+            source[3][1] = 0x00010101;
+            source[4][0] = 0x00010101;
+            source[4][1] = 1;
+            ImageToolKit.printArray(source, ImageToolKit.HEX_MODE);
+            ImageToolKit.printArray(ImageToolKit.transferEqualizationFiltering(source, 3), ImageToolKit.HEX_MODE);
 
+//            int num = 1;
+//            for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+//                for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+//                    source[sourceRow][sourceCol] = num++;
+//                }
+//            }
+//            ImageToolKit.printArray(source, ImageToolKit.DEC_MODE);
+//            int[][] target = new int[source.length][source[0].length];
+//            for (int sourceRow = 0; sourceRow < source.length; sourceRow++) {
+//                for (int sourceCol = 0; sourceCol < source[0].length; sourceCol++) {
+//                    target[sourceRow][sourceCol] = ImageToolKit.transferParticallyHistogramEqualization(source, sourceRow, sourceCol, 3);
+//                }
+//            }
+            //ImageToolKit.printArray(ImageToolKit.fetchParticallyArray(source, 5, 5, 3), ImageToolKit.DEC_MODE);
         } catch (Exception e) {
             e.printStackTrace();
         }
