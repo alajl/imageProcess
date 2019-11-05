@@ -159,7 +159,7 @@ public class ImageToolKit {
     }
 
     public static BufferedImage buildParticallyHistogramImage(BufferedImage image, int particallySize) {
-        return transferParticallyHistogramEqualizationImage(getArrayRGB(image), particallySize);
+        return ImageToolKit.buildImageWithArray(transferParticallyHistogramEqualizationImage(getArrayRGB(image), particallySize), BufferedImage.TYPE_BYTE_GRAY);
     }
 
     public static BufferedImage buildEqualizationFilteringImage(BufferedImage image, int particallySize) {
@@ -586,7 +586,7 @@ public class ImageToolKit {
         return ImageToolKit.buildImageWithArray(transferHistogramEqualization(source), BufferedImage.TYPE_BYTE_GRAY);
     }
 
-    public static BufferedImage transferParticallyHistogramEqualizationImage(int[][] source, int particallySize) {
+    public static int[][] transferParticallyHistogramEqualizationImage(int[][] source, int particallySize) {
         int[][] target = new int[source.length][source[0].length];
         int gray;
         int grayLevel;
@@ -597,7 +597,7 @@ public class ImageToolKit {
                 target[sourceRow][sourceCol] = gray;
             }
         }
-        return ImageToolKit.buildImageWithArray(target, BufferedImage.TYPE_BYTE_GRAY);
+        return target;
     }
 
     public static int[][] transferEqualizationFiltering(int[][] source, int particallySize) {
