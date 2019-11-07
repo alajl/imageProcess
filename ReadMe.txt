@@ -18,3 +18,5 @@ GUI模式：ImageProcess.Image_Main
 对于签名，目前仅实现了RED通道的签名，蓝色和绿色因为是一样原理，就没有实现
 另外代码是draft-1，只是实现功能，所以整洁性有待提高，
 JAVA版的FFT要比C++版的简洁点
+
+JDK版本：13.1
